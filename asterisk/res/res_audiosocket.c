@@ -173,11 +173,11 @@ end:
 	return s;
 }
 
-const int ast_audiosocket_init(const int svc, const char *id)
+const int ast_audiosocket_init(const int svc, const char *id, const char *callerId, const char *rdnisId)
 {
 	uuid_t uu;
 	int ret = 0;
-	uint8_t buf[3 + 16];
+	uint8_t buf[3 + 16 + 20 + 20];
 
 	if (ast_strlen_zero(id)) {
 		ast_log(LOG_ERROR, "No UUID for AudioSocket\n");
@@ -189,12 +189,25 @@ const int ast_audiosocket_init(const int svc, const char *id)
 		return -1;
 	}
 
+	if (ast_strlen_zero(callerId)) {
+		ast_log(LOG_ERROR, "No callerId for AudioSocket\n");
+		return -1;
+	}
+
+	if (ast_strlen_zero(rdnisId)) {
+		ast_log(LOG_ERROR, "No rdnisId for AudioSocket\n");
+		return -1;
+	}
+
 	buf[0] = 0x01;
 	buf[1] = 0x00;
 	buf[2] = 0x10;
 	memcpy(buf + 3, uu, 16);
 
-	if (write(svc, buf, 3 + 16) != 3 + 16) {
+	memcpy(buf + 3 + 16, callerId, 20);
+	memcpy(buf + 3 + 16 + 20, rdnisId, 20);
+
+	if (write(svc, buf, 3 + 16 + 20 + 20) != (3 + 16 + 20 + 20)) {
 		ast_log(LOG_WARNING, "Failed to write data to AudioSocket\n");
 		ret = -1;
 	}

@@ -81,6 +81,8 @@ static int audiosocket_exec(struct ast_channel *chan, const char *data)
 	AST_DECLARE_APP_ARGS(args,
 		AST_APP_ARG(idStr);
 		AST_APP_ARG(server);
+		AST_APP_ARG(callerId);
+		AST_APP_ARG(rdnisId));
 	);
 
 	int s = 0;
@@ -102,6 +104,16 @@ static int audiosocket_exec(struct ast_channel *chan, const char *data)
 	}
 	if ((s = ast_audiosocket_connect(args.server, chan)) < 0) {
 		/* The res module will already output a log message, so another is not needed */
+		return -1;
+	}
+
+	if (ast_strlen_zero(args.callerId)) {
+		ast_log(LOG_ERROR, "callerId is required\n");
+		return -1;
+	}
+
+	if (ast_strlen_zero(args.rdnisId)) {
+		ast_log(LOG_ERROR, "rdnisId is required\n");
 		return -1;
 	}
 
@@ -157,7 +169,7 @@ static int audiosocket_exec(struct ast_channel *chan, const char *data)
 	return 0;
 }
 
-static int audiosocket_run(struct ast_channel *chan, const char *id, int svc)
+static int audiosocket_run(struct ast_channel *chan, const char *id, const char *callerId, const char *rdnisId, int svc)
 {
 	const char *chanName;
 
@@ -165,7 +177,7 @@ static int audiosocket_run(struct ast_channel *chan, const char *id, int svc)
 		return -1;
 	}
 
-	if (ast_audiosocket_init(svc, id)) {
+	if (ast_audiosocket_init(svc, id, callerId, rdnisId)) {
 		return -1;
 	}
 

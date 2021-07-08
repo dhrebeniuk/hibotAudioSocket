@@ -47,6 +47,10 @@
 struct audiosocket_instance {
 	int svc;	/* The file descriptor for the AudioSocket instance */
 	char id[38];	/* The UUID identifying this AudioSocket instance */
+	char callerId[20];
+	char rdnisId[20];
+
+
 } audiosocket_instance;
 
 /* Forward declarations */
@@ -102,7 +106,7 @@ static int audiosocket_call(struct ast_channel *ast, const char *dest, int timeo
 
 	ast_queue_control(ast, AST_CONTROL_ANSWER);
 
-	return ast_audiosocket_init(instance->svc, instance->id);
+	return ast_audiosocket_init(instance->svc, instance->id, instance->callerId, instance->rdnisId);
 }
 
 /*! \brief Function called when we should hang the channel up */
@@ -136,6 +140,8 @@ static struct ast_channel *audiosocket_request(const char *type,
 	AST_DECLARE_APP_ARGS(args,
 		AST_APP_ARG(destination);
 		AST_APP_ARG(idStr);
+		AST_APP_ARG(callerId);
+		AST_APP_ARG(rdnisId);
 	);
 
 	if (ast_strlen_zero(data)) {
@@ -159,8 +165,19 @@ static struct ast_channel *audiosocket_request(const char *type,
 		ast_log(LOG_ERROR, "UUID is required for the 'AudioSocket' channel\n");
 		goto failure;
 	}
+
 	if (uuid_parse(args.idStr, uu)) {
 		ast_log(LOG_ERROR, "Failed to parse UUID '%s'\n", args.idStr);
+		goto failure;
+	}
+
+	if (ast_strlen_zero(args.callerId)) {
+		ast_log(LOG_ERROR, "callerId is required for the 'AudioSocket' channel\n");
+		goto failure;
+	}
+
+	if (ast_strlen_zero(args.rdnisId)) {
+		ast_log(LOG_ERROR, "rdnisId is required for the 'AudioSocket' channel\n");
 		goto failure;
 	}
 
@@ -170,6 +187,8 @@ static struct ast_channel *audiosocket_request(const char *type,
 		goto failure;
 	}
 	ast_copy_string(instance->id, args.idStr, sizeof(instance->id));
+	ast_copy_string(instance->callerId, args.callerId, sizeof(instance->callerId));
+	ast_copy_string(instance->rdnisId, args.rdnisId, sizeof(instance->rdnisId));
 
 	if ((fd = ast_audiosocket_connect(args.destination, NULL)) < 0) {
 		goto failure;
@@ -177,7 +196,7 @@ static struct ast_channel *audiosocket_request(const char *type,
 	instance->svc = fd;
 
 	chan = ast_channel_alloc(1, AST_STATE_DOWN, "", "", "", "", "", assignedids,
-		requestor, 0, "AudioSocket/%s-%s", args.destination, args.idStr);
+		requestor, 0, "AudioSocket/%s-%s-%s-%s", args.destination, args.idStr, args.callerId, args.rdnisId);
 	if (!chan) {
 		goto failure;
 	}
@@ -195,6 +214,8 @@ static struct ast_channel *audiosocket_request(const char *type,
 
 	pbx_builtin_setvar_helper(chan, "AUDIOSOCKET_UUID", args.idStr);
 	pbx_builtin_setvar_helper(chan, "AUDIOSOCKET_SERVICE", args.destination);
+	pbx_builtin_setvar_helper(chan, "AUDIOSOCKET_CALLER_ID", args.callerId);
+	pbx_builtin_setvar_helper(chan, "AUDIOSOCKET_RDNIS_ID", args.rdnisId);
 
 	ast_channel_unlock(chan);
 
