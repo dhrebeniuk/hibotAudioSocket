@@ -69,7 +69,7 @@
 
 static const char app[] = "AudioSocket";
 
-static int audiosocket_run(struct ast_channel *chan, const char *id, const int svc);
+static int audiosocket_run(struct ast_channel *chan, const char *id, const char *callerId, const char *rdnisId, const int svc);
 
 static int audiosocket_exec(struct ast_channel *chan, const char *data)
 {
@@ -140,7 +140,7 @@ static int audiosocket_exec(struct ast_channel *chan, const char *data)
 		return -1;
 	}
 
-	res = audiosocket_run(chan, args.idStr, s);
+	res = audiosocket_run(chan, args.idStr, args.callerId, args.rdnisId, s);
 	/* On non-zero return, report failure */
 	if (res) {
 		/* Restore previous formats and close the connection */

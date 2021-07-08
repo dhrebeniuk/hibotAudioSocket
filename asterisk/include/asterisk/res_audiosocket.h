@@ -54,11 +54,13 @@ const int ast_audiosocket_connect(const char *server, struct ast_channel *chan);
  *
  * \param svc The file descriptor of the network socket to the AudioSocket server.
  * \param id The UUID to send to the AudioSocket server to uniquely identify this connection.
+ * \param id The callerId to send to the AudioSocket server to uniquely identify this connection.
+ * \param id The rdnisId to send to the AudioSocket server to uniquely identify this connection.
  *
  * \retval 0 on success
  * \retval -1 on error
  */
-const int ast_audiosocket_init(const int svc, const char *id);
+const int ast_audiosocket_init(const int svc, const char *id, const char *callerId, const char *rdnisId);
 
 /*!
  * \brief Send an Asterisk audio frame to an AudioSocket server
