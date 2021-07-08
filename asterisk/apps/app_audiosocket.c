@@ -82,7 +82,7 @@ static int audiosocket_exec(struct ast_channel *chan, const char *data)
 		AST_APP_ARG(idStr);
 		AST_APP_ARG(server);
 		AST_APP_ARG(callerId);
-		AST_APP_ARG(rdnisId));
+		AST_APP_ARG(rdnisId);
 	);
 
 	int s = 0;
